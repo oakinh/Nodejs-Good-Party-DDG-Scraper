@@ -5,7 +5,7 @@ dotenv.config();
 
 const location = 'mckinney texas';
 const query = `${location} (election | candidate | elections | candidates) (filing | listing | filings | listings | list)`;
-const limit = 5;
+const limit = 10;
 
 
 async function main() {

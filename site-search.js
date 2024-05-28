@@ -48,7 +48,7 @@ async function extractTextFromHTML(urls) {
             const data = unfluff(html, 'en');
             texts.push(`Website ${number}: ${data.text}`);
         } catch (error) {
-            console.log(`${error.message}`);
+            throw new Error(`Error extracting text from HTML. Site Number: ${number}. Message:${error.message}`);
         }
         number++;
     }
