@@ -1,18 +1,23 @@
 import dotenv from 'dotenv';
-import OpenAI from 'openai';
+import { searchDDG, extractTextFromHTML, analyzeResults } from './site-search.js';
 
 dotenv.config();
 
-const openai = new OpenAI();
+const location = 'mckinney texas';
+const query = `${location} (election | candidate | elections | candidates) (filing | listing | filings | listings | list)`;
+const limit = 5;
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 async function main() {
-    const completion = await openai.chat.completions.create({
-        messages: [{role: "system", content: "You are a helpful assistant."}],
-        model: "gpt-3.5-turbo",
-    });
-    console.log(completion.choices[0])
+    try {
+        const searchResultsURL = await searchDDG(query, limit);
+        const HTMLText = await extractTextFromHTML(searchResultsURL);
+        const candidateInformation = await analyzeResults(HTMLText, location);
+        console.log(candidateInformation);
+    } catch (error) {
+        console.error('An error occured:', error);
+    }
+    
 }
 
 main();
