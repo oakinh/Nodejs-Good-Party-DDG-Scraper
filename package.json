@@ -1,0 +1,25 @@
+{
+  "name": "nodejs-good-party-ddg-scraper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node main.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+  },
+  "jest": {
+    "transform": {}
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "jes": "^0.6.1"
+  },
+  "type": "module",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "duck-duck-scrape": "^2.2.5",
+    "openai": "^4.47.1",
+    "unfluff": "^3.2.0"
+  }
+}
