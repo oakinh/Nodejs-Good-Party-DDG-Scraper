@@ -3,12 +3,13 @@ import OpenAI from 'openai';
 import DDG from 'duck-duck-scrape';
 import unfluff from 'unfluff';
 import fs from 'fs';
+import { JSDOM } from 'jsdom';
 
 dotenv.config();
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const openai = new OpenAI(OPENAI_API_KEY);
-const model_name = 'gpt-3.5-turbo';
+const model_name = 'gpt-4o';
 
 async function searchDDG(query, limit) {
     try {
@@ -16,7 +17,7 @@ async function searchDDG(query, limit) {
         const results = response.results;
         const limitedResults = results.slice(0, limit);
         const urls = limitedResults.map(result => result.url);
-        return limitedResults;
+        return urls;
     } catch (error) {
         console.error('Error fetching results:', error);
         return [];
@@ -43,6 +44,31 @@ async function fetchHTML(url) {
     return response.text();
 }
 
+async function extractTable(url) {
+    try {
+        const HTML = await fetchHTML(url);
+        const dom = new JSDOM(HTML);
+        const document = dom.window.document
+        const table = document.querySelector('table');
+        const tbody = table.querySelector('tbody');
+        const rows = tbody.querySelectorAll('tr');
+        let tableData = [];
+
+        rows.forEach(row => {
+            let rowData = [];
+            const cells = row.querySelectorAll('td, th');
+            cells.forEach(cell => {
+                rowData.push(cell.textContent.trim());
+            });
+            tableData.push(rowData);
+        return tableData
+    })
+    } catch (error) {
+        console.error("\n~~~~~~\n Table wasn't found or couldn't be extracted. \n~~~~~~\n.", error.message)
+    }
+    
+}
+
 async function extractTextFromHTML(urls) {
     const texts = [];
     let number = 1
@@ -50,7 +76,11 @@ async function extractTextFromHTML(urls) {
         try {
             const html = await fetchHTML(url);
             const data = unfluff(html, 'en');
-            texts.push(`Website ${number}: ${data.text}`);
+            const dom = new JSDOM(html);
+            const table = extractTable(url);
+            table = dom.window.document.querySelectorAll('tbody').textContent
+            texts.push(`Website ${number} - URL: ${url} Title: ${data.title}. Text: ${data.text} \n Table: ${table}`);
+            texts.push('\n ~~~~~~~~~~~~~~~~~~ \n');
         } catch (error) {
             throw new Error(`Error extracting text from HTML. Site Number: ${number}. Message:${error.message}`);
         }
@@ -62,7 +92,7 @@ async function extractTextFromHTML(urls) {
 async function analyzeResults(results, location) {
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
     const openai = new OpenAI(OPENAI_API_KEY);
-    const model_name = 'gpt-3.5-turbo';
+    const model_name = 'gpt-4o';
     const completion = await openai.chat.completions.create({
         model: model_name,
         messages: [
@@ -77,16 +107,16 @@ async function analyzeResults(results, location) {
 async function analyzeResultsHasData(results) {
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
     const openai = new OpenAI(OPENAI_API_KEY);
-    const model_name = 'gpt-3.5-turbo';
+    const model_name = 'gpt-4o';
     const completion = await openai.chat.completions.create({
         model: model_name,
         messages: [
             { role: 'system', content: 'You are a political researcher trying to identify candidates running for local offices based on the information passed to you.' },
-            { role: 'user', content: 'Analyze the text from each of the 10 websites, and ' },
+            { role: 'user', content: 'Analyze the text from each of the websites, and return either the URL of the site that has data on local candidates running for office, or \'Not Found\' if none of them have that data. Office examples include but are not limited to: school board member, sheriff, commissioner, mayor, councilmember.' },
             { role: 'user', content: results.join('\n\n') }
         ],
     });
     return completion.choices[0].message.content;
 }
 
-export { analyzeResults, extractTextFromHTML, searchDDG };
+export { analyzeResults, extractTextFromHTML, searchDDG, analyzeResultsHasData, fetchHTML };
