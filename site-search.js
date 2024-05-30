@@ -44,10 +44,8 @@ async function fetchHTML(url) {
     return response.text();
 }
 
-async function extractTable(url) {
+async function extractTable(dom) {
     try {
-        const HTML = await fetchHTML(url);
-        const dom = new JSDOM(HTML);
         const document = dom.window.document
         const table = document.querySelector('table');
         const tbody = table.querySelector('tbody');
@@ -71,19 +69,20 @@ async function extractTable(url) {
 
 async function extractTextFromHTML(urls) {
     const texts = [];
-    let number = 1
+    let number = 1;
+    let dom;
+    let data; 
     for (const url of urls) {
         try {
             const html = await fetchHTML(url);
-            const data = unfluff(html, 'en');
-            const dom = new JSDOM(html);
-            const table = extractTable(url);
-            table = dom.window.document.querySelectorAll('tbody').textContent
-            texts.push(`Website ${number} - URL: ${url} Title: ${data.title}. Text: ${data.text} \n Table: ${table}`);
-            texts.push('\n ~~~~~~~~~~~~~~~~~~ \n');
+            data = unfluff(html, 'en');
+            dom = new JSDOM(html);
         } catch (error) {
-            throw new Error(`Error extracting text from HTML. Site Number: ${number}. Message:${error.message}`);
+            throw new Error(`Error extracting text from HTML. Site Number: ${number}. URL: ${url} Message:${error.message}`);
         }
+        const table = await extractTable(dom);
+        texts.push(`Website ${number} - URL: ${url} Title: ${data.title}. Text: ${data.text} \n Table: ${table}`);
+        texts.push('\n ~~~~~~~~~~~~~~~~~~ \n');
         number++;
     }
     return texts;
@@ -119,4 +118,4 @@ async function analyzeResultsHasData(results) {
     return completion.choices[0].message.content;
 }
 
-export { analyzeResults, extractTextFromHTML, searchDDG, analyzeResultsHasData, fetchHTML };
+export { analyzeResults, extractTextFromHTML, searchDDG, analyzeResultsHasData, fetchHTML, extractTable };
