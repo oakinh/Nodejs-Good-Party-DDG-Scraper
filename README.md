@@ -1,0 +1,1 @@
+This is a tool used to scrape DuckDuckGo and process the data with ChatGPT to identify the official website for government bodies.
