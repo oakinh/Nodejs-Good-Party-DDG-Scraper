@@ -111,7 +111,7 @@ async function analyzeResultsHasData(results) {
         model: model_name,
         messages: [
             { role: 'system', content: 'You are a political researcher trying to identify candidates running for local offices based on the information passed to you.' },
-            { role: 'user', content: 'Analyze the text from each of the websites, and return either the URL of the site that has data on local candidates running for office, or \'Not Found\' if none of them have that data. Office examples include but are not limited to: school board member, sheriff, commissioner, mayor, councilmember.' },
+            { role: 'user', content: 'Analyze the text from each of the websites, and return either the URL of the site that has data on local candidates running for office, or \'Not Found\' if none of them have that data. Office examples include but are not limited to: school board member, sheriff, commissioner, mayor, councilmember. If multiple results have the candidate data we\'re looking for, then return a maximum of 2 URLs.' },
             { role: 'user', content: results.join('\n\n') }
         ],
     });
