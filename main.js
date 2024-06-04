@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { searchDDG, extractTextFromHTML, analyzeResults, analyzeResultsHasData } from './site-search.js';
+import { searchDDG, extractTextFromHTML, analyzeResults, analyzeResultsHasData, extractURL } from './site-search.js';
 import { parseCSV, usStateSwitch, filterSearchResults } from './data-prep.js';
 import fs from 'fs';
 import { sleep } from './sleep.js';
@@ -19,6 +19,8 @@ const csvWriter = createObjectCsvWriter ({
         { id: 'site 3', title: 'Site 3' },
         { id: 'site 4', title: 'Site 4' },
         { id: 'site 5', title: 'Site 5' },
+        { id: 'location', title: 'Location' },
+        { id: 'links', title: 'Links' },
         { id: 'gpt response', title: 'GPT Response' }
     ]
 });
@@ -36,12 +38,15 @@ async function main() {
             // const filteredResults = filterSearchResults(searchResults, queryObj);
             const HTMLText = await extractTextFromHTML(searchResultsURL);
             const candidateInformation = await analyzeResultsHasData(HTMLText);
+            const links = extractURL(candidateInformation)
             let row = { 
                 'site 1': searchResultsURL[0], 
                 'site 2': searchResultsURL[1],
                 'site 3': searchResultsURL[2],
                 'site 4': searchResultsURL[3],
                 'site 5': searchResultsURL[4],
+                'location': location,
+                'links': links,
                 'gpt response': candidateInformation
             }
             records.push(row)

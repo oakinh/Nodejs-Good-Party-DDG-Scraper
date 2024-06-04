@@ -59,12 +59,12 @@ async function extractTable(dom) {
                 rowData.push(cell.textContent.trim());
             });
             tableData.push(rowData);
+        
+    });
         return tableData
-    })
     } catch (error) {
         console.error("\n~~~~~~\n Table wasn't found or couldn't be extracted. \n~~~~~~\n.", error.message)
     }
-    
 }
 
 async function extractTextFromHTML(urls) {
@@ -118,4 +118,10 @@ async function analyzeResultsHasData(results) {
     return completion.choices[0].message.content;
 }
 
-export { analyzeResults, extractTextFromHTML, searchDDG, analyzeResultsHasData, fetchHTML, extractTable };
+function extractURL(text) {
+    const pattern = /https?:\/\/(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F])|[\/?:=&])+/g;
+    const urls = text.match(pattern);
+    return urls || [];
+}
+
+export { analyzeResults, extractTextFromHTML, searchDDG, analyzeResultsHasData, fetchHTML, extractTable, extractURL };
