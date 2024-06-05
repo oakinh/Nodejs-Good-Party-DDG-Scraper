@@ -7,7 +7,7 @@ import { createObjectCsvWriter } from 'csv-writer';
 
 dotenv.config();
 
-const locations = parseCSV('./county.csv')?.filter(r=> /\bNV/i.test(r.state))?.slice(0, 3);
+const locations = parseCSV('./county.csv')?.filter(r=> /\bUT/i.test(r.state))?.slice(0, 40);
 console.log(locations.length);
 const limit = 5;
 
@@ -50,7 +50,7 @@ async function main() {
                     'site 3': filteredResults[2]?.url,
                     'site 4': filteredResults[3]?.url,
                     'site 5': filteredResults[4]?.url,
-                    'location': location,
+                    'location': locationClean,
                     'links': links,
                     'gpt response': candidateInformation
             }
