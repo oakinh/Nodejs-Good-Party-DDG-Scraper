@@ -1,2 +1,4 @@
 node_modules/
 .env
+output.csv
+searchResults-test-SC.json
