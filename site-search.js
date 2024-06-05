@@ -17,7 +17,7 @@ async function searchDDG(query, limit) {
         const results = response.results;
         const limitedResults = results.slice(0, limit);
         const urls = limitedResults.map(result => result.url);
-        return urls;
+        return limitedResults;
     } catch (error) {
         console.error('Error fetching results:', error);
         return [];
@@ -32,13 +32,16 @@ async function fetchHTML(url) {
         response = await fetch(url);
     } catch (error) {
         failContainer.push({res:response?.status,url:url});
+        console.log(response.status, url)
     }
     if (response.status > 399) {
         failContainer.push({res:response?.status,url:url});
+        console.log(response.status, url)
     }
     const contentType = response.headers.get('content-type');
     if (!contentType.includes('text/html')) {
         failContainer.push({res:response?.status,url:url,contentType:contentType});
+        console.log(response.status, url, contentType)
     }
     fs.writeFileSync('./failcontainer.json',JSON.stringify(failContainer));
     return response.text();
@@ -123,5 +126,25 @@ function extractURL(text) {
     const urls = text.match(pattern);
     return urls || [];
 }
+
+async function analyzeExtractURLs(dom) {
+    const document = dom.window.document;
+    const anchors = dom.window.document.querySelectorAll('a');
+
+    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+    const openai = new OpenAI(OPENAI_API_KEY);
+    const model_name = 'gpt-4o';
+    const completion = await openai.chat.completions.create({
+        model: model_name,
+        messages: [
+            { role: 'system', content: 'You are a political researcher trying to identify candidates running for local offices based on the information passed to you.' },
+            { role: 'user', content: 'Analyze the links I will pass to you. Please choose which of the links will most likely lead us to information on political candidates running for office. I will navigate to the link you choose and pass you more links until we find a list of political candidates running for local office in 2024.' },
+            { role: 'user', content: results.join('\n\n') }
+        ],
+    });
+    return completion.choices[0].message.content;
+}
+
+
 
 export { analyzeResults, extractTextFromHTML, searchDDG, analyzeResultsHasData, fetchHTML, extractTable, extractURL };

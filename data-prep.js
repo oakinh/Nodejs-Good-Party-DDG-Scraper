@@ -26,30 +26,31 @@ function parseCSV(filepath){
 
 function filterSearchResults(results,query){
   var {state,stateFullName,county,keyword} = query;
-  console.log(`Results passed to filter: ${JSON.stringify(results)}`);
-  fs.writeFile('searchResults-test-SC.json', JSON.stringify(results));
+  console.log(`Results passed to filter: ${JSON.stringify({results:results,query:query})}`);
+  fs.writeFileSync('searchResults-test-SC.json', JSON.stringify({results:results,query:query}));
+
   return results.filter(r=> {
-    // !/wikip/i.test(r.url)
-    // &&
+    return !/wikip/i.test(r.url)
+    &&
     (
       new RegExp(`\\b${state}\\b|${stateFullName}`,'i').test(r.title)
       ||
       new RegExp(`\\b${state}\\b|${stateFullName}`,'i').test(r.description)
     )
-    // &&
-    // (
-    //   new RegExp(`${county}`,'i').test(r.title)
-    //   ||
-    //   new RegExp(`${county}`,'i').test(r.description)
-    // )
-    // &&
-    // (
-    //   keyword ? (
-    //     new RegExp(`${keyword}`,'i').test(r.title)
-    //     ||
-    //     new RegExp(`${keyword}`,'i').test(r.description)
-    //   ) : true
-    // )
+    &&
+    (
+      new RegExp(`${county}`,'i').test(r.title)
+      ||
+      new RegExp(`${county}`,'i').test(r.description)
+    )
+    &&
+    (
+      keyword ? (
+        new RegExp(`${keyword}`,'i').test(r.title)
+        ||
+        new RegExp(`${keyword}`,'i').test(r.description)
+      ) : true
+    )
   })
 }
 
