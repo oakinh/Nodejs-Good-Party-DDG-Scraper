@@ -1,15 +1,19 @@
 import dotenv from 'dotenv';
+dotenv.config();
 import { searchDDG, extractTextFromHTML, analyzeResults, analyzeResultsHasData, extractURL } from './site-search.js';
 import { parseCSV, usStateSwitch, filterSearchResults } from './data-prep.js';
 import fs from 'fs';
 import { sleep } from './sleep.js';
 import { createObjectCsvWriter } from 'csv-writer';
+import async from 'async';
 
-dotenv.config();
 
-const locations = parseCSV('./county.csv')?.filter(r=> /\bUT/i.test(r.state))?.slice(0, 40);
+
+const locations = parseCSV('./municipality-prepped.csv')?.filter(r=> /\bUT/i.test(r.state))?.slice(0, 1000);
+console.log('Locations here:', locations)
 console.log(locations.length);
-const limit = 5;
+const limit = 10;
+
 
 const csvWriter = createObjectCsvWriter ({
     path: 'output.csv',
@@ -19,6 +23,11 @@ const csvWriter = createObjectCsvWriter ({
         { id: 'site 3', title: 'Site 3' },
         { id: 'site 4', title: 'Site 4' },
         { id: 'site 5', title: 'Site 5' },
+        { id: 'site 6', title: 'Site 6' },
+        { id: 'site 7', title: 'Site 7' },
+        { id: 'site 8', title: 'Site 8' },
+        { id: 'site 9', title: 'Site 9' },
+        { id: 'site 10', title: 'Site 10' },
         { id: 'location', title: 'Location' },
         { id: 'links', title: 'Links' },
         { id: 'gpt response', title: 'GPT Response' }
@@ -27,13 +36,19 @@ const csvWriter = createObjectCsvWriter ({
 
 
 async function main() {
+    console.log('Main function started');
     let records = [];
     for (const location of locations) {
         try {
+            console.log(`Processing location: ${location.name}, ${location.state}`)
             const stateFullName = usStateSwitch(location.state);
             const locationClean = `${location.name} county ${location.state}`;
             const query = `${locationClean} local (election | candidate | elections | candidates) (filing | listing | filings | listings | list) 2024`;
+            console.log(`Query: ${query}`)
+            
+            console.log('Calling searchDDG function');
             const searchResults = await searchDDG(query, limit);
+            console.log('Search Results:', searchResults)
             
             const queryObj = {state:location.state,stateFullName:stateFullName,county:location.name}
             const filteredResults = filterSearchResults(searchResults, queryObj);
@@ -50,6 +65,11 @@ async function main() {
                     'site 3': filteredResults[2]?.url,
                     'site 4': filteredResults[3]?.url,
                     'site 5': filteredResults[4]?.url,
+                    'site 6': filteredResults[5]?.url, 
+                    'site 7': filteredResults[6]?.url,
+                    'site 8': filteredResults[7]?.url,
+                    'site 9': filteredResults[8]?.url,
+                    'site 10': filteredResults[9]?.url,
                     'location': locationClean,
                     'links': links,
                     'gpt response': candidateInformation
@@ -70,6 +90,8 @@ async function main() {
         .catch(error => {
             console.error('Error writing to CSV file', error);
         });
+        console.log('Main function ended');
 }
+
 
 main();

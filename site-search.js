@@ -1,25 +1,58 @@
 import dotenv from 'dotenv';
+dotenv.config();
 import OpenAI from 'openai';
 import DDG from 'duck-duck-scrape';
 import unfluff from 'unfluff';
 import fs from 'fs';
 import { JSDOM } from 'jsdom';
+import { HttpsProxyAgent } from 'hpagent';
 
-dotenv.config();
+
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const openai = new OpenAI(OPENAI_API_KEY);
 const model_name = 'gpt-4o';
 
+const proxies = process.env.PROXIES.split(',');
+
+function getRandomProxy(proxies) {
+    const randomIndex = Math.floor(Math.random() * proxies.length);
+    let selectedProxy = proxies[randomIndex]
+    console.log(selectedProxy)
+    return selectedProxy;
+}
+
+const proxyURL = getRandomProxy(proxies);
+
+
 async function searchDDG(query, limit) {
     try {
+        if (!proxyURL) {
+            throw new Error('Proxy URL is not defined');
+        }
+
+        const needleOptions = {
+            proxy: proxyURL,
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+        };
+
+        console.log('Needle options:', needleOptions);
+
         const response = await DDG.search(query);
+        console.log('DDG response:', response);
         const results = response.results;
+        if (!results) {
+            console.log('No results found');
+            return [];
+        }
         const limitedResultsObj = results.slice(0, limit);
         // const urls = limitedResults.map(result => result.url);
         return limitedResultsObj;
     } catch (error) {
-        console.error('Error fetching results:', error);
+        console.error('Error fetching results:', error.message);
+        console.error(error.response ? error.response.body : error)
         return [];
     }
 }
