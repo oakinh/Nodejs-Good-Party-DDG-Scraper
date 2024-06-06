@@ -1,5 +1,4 @@
 import dotenv from 'dotenv';
-dotenv.config();
 import { searchDDG, extractTextFromHTML, analyzeResults, analyzeResultsHasData, extractURL } from './site-search.js';
 import { parseCSV, usStateSwitch, filterSearchResults } from './data-prep.js';
 import fs from 'fs';
@@ -7,9 +6,9 @@ import { sleep } from './sleep.js';
 import { createObjectCsvWriter } from 'csv-writer';
 import async from 'async';
 
+dotenv.config();
 
-
-const locations = parseCSV('./municipality-prepped.csv')?.filter(r=> /\bUT/i.test(r.state))?.slice(0, 1000);
+const locations = parseCSV('./municipality-prepped.csv')?.filter(r=> /\bUT/i.test(r.state))?.slice(0, 3);
 console.log('Locations here:', locations)
 console.log(locations.length);
 const limit = 10;
@@ -81,7 +80,8 @@ async function main() {
         } catch (error) {
             console.error('An error occured:', error);
         }
-        await sleep(5000);
+        const sleepTime = Math.floor(Math.random() * 2000) + 1000; // Random between 1000ms (1s) and 3000ms (3s)
+        await sleep(sleepTime);
     }  
     csvWriter.writeRecords(records)
         .then(() => {

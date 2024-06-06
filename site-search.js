@@ -40,7 +40,7 @@ async function searchDDG(query, limit) {
 
         console.log('Needle options:', needleOptions);
 
-        const response = await DDG.search(query);
+        const response = await DDG.search(query, {}, needleOptions);
         console.log('DDG response:', response);
         const results = response.results;
         if (!results) {
