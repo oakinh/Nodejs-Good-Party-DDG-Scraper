@@ -5,6 +5,8 @@ import fs from 'fs';
 import { sleep } from './sleep.js';
 import { createObjectCsvWriter } from 'csv-writer';
 import async from 'async';
+import SearchApi from './duckduckgo.js';
+import { search } from 'duck-duck-scrape';
 
 dotenv.config();
 
@@ -37,6 +39,8 @@ const csvWriter = createObjectCsvWriter ({
 async function main() {
     console.log('Main function started');
     let records = [];
+    const SearchApiInstance = new SearchApi();
+
     for (const location of locations) {
         try {
             console.log(`Processing location: ${location.name}, ${location.state}`)
@@ -46,7 +50,12 @@ async function main() {
             console.log(`Query: ${query}`)
             
             console.log('Calling searchDDG function');
-            const searchResults = await searchDDG(query, limit);
+            const searchResults = SearchApiInstance.text(query);
+
+            const resultsArray = [];
+            for await (const result of searchResults) {
+                resultsArray.push(result);
+            }
             console.log('Search Results:', searchResults)
             
             const queryObj = {state:location.state,stateFullName:stateFullName,county:location.name}
@@ -80,8 +89,8 @@ async function main() {
         } catch (error) {
             console.error('An error occured:', error);
         }
-        const sleepTime = Math.floor(Math.random() * 2000) + 1000; // Random between 1000ms (1s) and 3000ms (3s)
-        await sleep(sleepTime);
+        // const sleepTime = Math.floor(Math.random() * 2000) + 1000; // Random between 1000ms (1s) and 3000ms (3s)
+        // await sleep(sleepTime);
     }  
     csvWriter.writeRecords(records)
         .then(() => {
