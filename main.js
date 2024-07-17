@@ -1,14 +1,15 @@
 import dotenv from 'dotenv';
-import { searchDDG, extractTextFromHTML, analyzeResults, analyzeResultsHasData, extractURL } from './site-search.js';
+dotenv.config();
+import { extractTextFromHTML, analyzeResults, analyzeResultsHasData, extractURL } from './site-search.js';
 import { parseCSV, usStateSwitch, filterSearchResults } from './data-prep.js';
 import fs from 'fs';
 import { sleep } from './sleep.js';
 import { createObjectCsvWriter } from 'csv-writer';
 import async from 'async';
-import SearchApi from './duckduckgo.js';
-import { search } from 'duck-duck-scrape';
+import { smartproxy_list } from './config.js';
+import { loopThroughSearches } from './utils.js';
 
-dotenv.config();
+
 
 const locations = parseCSV('./municipality-prepped.csv')?.filter(r=> /\bUT/i.test(r.state))?.slice(0, 3);
 console.log('Locations here:', locations)
@@ -39,7 +40,6 @@ const csvWriter = createObjectCsvWriter ({
 async function main() {
     console.log('Main function started');
     let records = [];
-    const SearchApiInstance = new SearchApi();
 
     for (const location of locations) {
         try {
@@ -49,8 +49,9 @@ async function main() {
             const query = `${locationClean} local (election | candidate | elections | candidates) (filing | listing | filings | listings | list) 2024`;
             console.log(`Query: ${query}`)
             
-            console.log('Calling searchDDG function');
-            const searchResults = SearchApiInstance.text(query);
+            const searchResults = await loopThroughSearches([
+                { keywords: query },
+            ], smartproxy_list);
 
             const resultsArray = [];
             for await (const result of searchResults) {
